@@ -1,6 +1,6 @@
 # KMenu Modern Search Integration (Classic Menu)
 
-A major redesign of the search experience for the TDE Classic Menu (KMenu). 
+A redesign of the search experience for the TDE Classic Menu (KMenu). 
 This integration ports the instant-filtering search logic to the classic Trinity panel menu.
 
 ## Features
