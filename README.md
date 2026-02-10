@@ -77,14 +77,8 @@ The script will automatically build a Release version (if not done), install to 
 
 ## Screenshots
 
-![Search Interface](screenshots/screenshot_kicker_menu_search.jpg)
-*Standard search with instant results*
-
-![Rich Results](screenshots/screenshot_kicker_menu_search2.jpg)
-*Rich results count and category headers*
-
+![Search Interface](screenshots/screenshot_kicker_menu_search.jpg) ![Rich Results](screenshots/screenshot_kicker_menu_search2.jpg)
 ![Empty State](screenshots/screenshot_kicker_menu_search3.jpg)
-*No results state with clean feedback*
 
 
 
