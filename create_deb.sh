@@ -11,7 +11,7 @@ BUILD_DIR="package_build"
 
 # Detect Trinity version from parent directory or system
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-TDE_BASE_DIR="/home/cdef/tdebase-trinity-14.1.1"
+TDE_BASE_DIR="$(dirname "$SCRIPT_DIR")"
 BUILD_ROOT="$TDE_BASE_DIR/build"
 
 # Package name format
