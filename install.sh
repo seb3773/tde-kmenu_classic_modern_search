@@ -20,6 +20,7 @@ echo "Installing KMenu Modern Search to: $TARGET"
 cp -v src/kicker/kicker/ui/* "$TARGET/kicker/kicker/ui/"
 
 # Copy CMakeLists (auto-sstrip)
+cp -v src/kicker/CMakeLists.txt           "$TARGET/kicker/"
 cp -v src/kicker/kicker/CMakeLists.txt    "$TARGET/kicker/kicker/"
 cp -v src/kicker/libkicker/CMakeLists.txt "$TARGET/kicker/libkicker/"
 

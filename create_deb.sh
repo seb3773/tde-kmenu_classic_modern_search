@@ -57,6 +57,18 @@ find "$TEMP_INSTALL_DIR/opt/trinity/lib/trinity" -name "kickermenu_*.so" -exec c
 mkdir -p "$BUILD_DIR/opt/trinity/share/icons/hicolor/16x16/apps"
 cp "$SCRIPT_DIR/data/icons/hi16-app-search_empty.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/16x16/apps/search_empty.png"
 
+# Install menu-settings icon (ConfigTDE sidebar button)
+mkdir -p "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps"
+cp "$SCRIPT_DIR/data/icons/hi32-app-menu-settings.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/menu-settings.png"
+cp "$SCRIPT_DIR/menu-images.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/menu-images.png"
+cp "$SCRIPT_DIR/menu-docs.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/menu-docs.png"
+cp "$SCRIPT_DIR/menu-logout.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/menu-logout.png"
+cp "$SCRIPT_DIR/menu-restart.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/menu-restart.png"
+cp "$SCRIPT_DIR/menu-sleep.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/menu-sleep.png"
+cp "$SCRIPT_DIR/menu-hibernate.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/menu-hibernate.png"
+cp "$SCRIPT_DIR/menu-hybrid.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/menu-hybrid.png"
+cp "$SCRIPT_DIR/kickermenu_logout.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/kickermenu-logout.png"
+
 # Cleanup temp install
 rm -rf "$TEMP_INSTALL_DIR"
 
