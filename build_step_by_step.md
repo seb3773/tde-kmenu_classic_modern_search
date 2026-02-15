@@ -120,10 +120,11 @@ cmake .. \
   -DCMAKE_INSTALL_PREFIX=/opt/trinity \
   -DCMAKE_CXX_FLAGS="-g0 -O2 -Wl,--relax -Wl,-z,norelro -fstrict-aliasing -flto=auto -ffunction-sections -fdata-sections -fno-ident -fno-plt -fno-asynchronous-unwind-tables -fno-unwind-tables -fomit-frame-pointer -fno-stack-protector -fno-math-errno -ffast-math -fvisibility=hidden -fmerge-all-constants -fuse-ld=gold -Wl,--gc-sections,--build-id=none,--as-needed,--strip-all,-O1,--icf=all,--compress-debug-sections=zlib -s -Wno-deprecated-declarations" \
   -DBUILD_KICKER=ON \
-  -DBUILD_ALL=OFF
+  -DBUILD_ALL=OFF \
+  -DWITH_TDEHWLIB=ON
 
 cd kicker
-make -j$(nproc)
+make -j2
 
 
 During CMake configuration, you should see something like:
@@ -287,7 +288,6 @@ mkdir build && cd build
 And run cmake again.
 
 
-
 **** CMake Error - "include could not find requested file: TDEVersion" (TDE 14.1.5+)
 
 --> TDE 14.1.5 introduced new CMake modules that are not part of the standard tdebase source.
@@ -296,7 +296,6 @@ You must install the `tde-cmake` package:
 sudo apt install tde-cmake
 
 This will install `TDEVersion.cmake` and other essential modules to your system.
-
 
 
 **** "make: *** No targets specified and no makefile found"
@@ -353,6 +352,7 @@ sudo cp sstrip /usr/local/bin/
 If sstrip is not available, the CMakeLists.txt will automatically fall back to `strip --strip-all`,
 which produces a slightly larger binary (~8-12KB).
 
+
 **** Compilation errors: TQT_SIGNAL, TQT_SLOT, tqdrawPrimitive (TDE 14.1.5+)
 
 --> TDE 14.1.5 cleaned up some older TQt API prefixes. Specifically:
@@ -363,6 +363,62 @@ The provided Modern Search source files (`k_mnu.h`, `k_new_mnu.h`, `popupmenutit
 compatibility guards that automatically map these back for smooth compilation on both 14.1.1 and 14.1.5.
 No manual source modification is required if you are using the latest version of these files.
 
+
+
+**** CRITICAL: Kicker loads OLD version despite successful build & install
+
+Symptoms:
+- `sudo make install` succeeds and installs to `/opt/trinity/`
+- But the running kicker shows OLD behavior (missing features, old layout)
+- You are 100% sure the source code is correct
+
+--> The system may have a **second copy** of kicker binaries in `/usr/local/` from a previous
+installation. The running process loads from `/usr/local/` because it takes priority over
+`/opt/trinity/` in the dynamic linker search path.
+
+How to diagnose:
+
+```
+# Check which binary the running kicker is actually using:
+KPID=$(pgrep -x kicker | head -1)
+cat /proc/$KPID/maps | grep -i kicker
+```
+
+If you see `/usr/local/lib/libtdeinit_kicker.so` instead of `/opt/trinity/lib/libtdeinit_kicker.so`,
+that's the problem. The running kicker is loading stale binaries from `/usr/local/`.
+
+How to fix:
+
+```
+# Remove ALL kicker binaries from /usr/local/ (they should NOT be there):
+sudo rm -f /usr/local/bin/kicker
+sudo rm -f /usr/local/lib/libtdeinit_kicker.so
+sudo rm -f /usr/local/lib/libtdeinit_kicker.la
+sudo rm -f /usr/local/lib/libkickermain.so
+sudo rm -f /usr/local/lib/libkickermain.so.1
+sudo rm -f /usr/local/lib/libkickermain.so.1.0.0
+sudo rm -f /usr/local/lib/libkickermain.la
+sudo ldconfig
+
+# Then reinstall properly:
+cd ~/src/tdebase-trinity-14.1.1/build/kicker
+sudo make install
+
+# Restart kicker:
+dcop kicker kicker restart
+```
+
+The key library that contains ALL the UI code (menus, sidebar, search, sessions) is
+`libtdeinit_kicker.so`, NOT `libkickermain.so`. Always verify this file is up to date.
+
+Prevention: after ANY `cmake` reconfiguration, always check that `CMAKE_INSTALL_PREFIX`
+is set to `/opt/trinity` and that no stale binaries exist in `/usr/local/`:
+
+```
+ls /usr/local/bin/kicker /usr/local/lib/libtdeinit_kicker* /usr/local/lib/libkickermain* 2>/dev/null
+```
+
+If any files are listed, remove them.
 
 
 - cmake options:
