@@ -1,18 +1,31 @@
 #!/bin/bash
 
 # Configuration
-PACKAGE_NAME="tde-kicker-q4win10"
-PACKAGE_VERSION="14.1.1"
-DEB_VERSION="14.1.1-1"
-ARCH=$(dpkg --print-architecture)
-MAINTAINER="seb3773 <seb3773@github.com>"
-DESCRIPTION="Optimized Kicker (TDE Panel) with Windows 10 Search logic"
-BUILD_DIR="package_build"
+PACKAGE_NAME="tde-kicker-classicx-q4win10"
 
 # Detect Trinity version from parent directory or system
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TDE_BASE_DIR="$(dirname "$SCRIPT_DIR")"
 BUILD_ROOT="$TDE_BASE_DIR/build"
+
+# Dynamic version detection
+DETECTED_VERSION=""
+if [ -f "$BUILD_ROOT/CMakeCache.txt" ]; then
+    DETECTED_VERSION=$(grep "TDE_VERSION:INTERNAL=" "$BUILD_ROOT/CMakeCache.txt" | cut -d= -f2)
+fi
+
+if [ -z "$DETECTED_VERSION" ] && [ -f "$TDE_BASE_DIR/debian/changelog" ]; then
+    # Extracts version from first line of changelog, excluding epoch
+    DETECTED_VERSION=$(head -n 1 "$TDE_BASE_DIR/debian/changelog" | sed 's/.*(\(.*\)).*/\1/' | cut -d: -f2 | cut -d- -f1)
+fi
+
+# Fallback if detection fails
+PACKAGE_VERSION="${DETECTED_VERSION:-14.1.1}"
+DEB_VERSION="${PACKAGE_VERSION}-1"
+ARCH=$(dpkg --print-architecture)
+MAINTAINER="seb3773 <seb3773@github.com>"
+DESCRIPTION="Optimized Kicker Menu (TDE Panel)"
+BUILD_DIR="package_build"
 
 # Package name format
 DEB_NAME="${PACKAGE_NAME}_${PACKAGE_VERSION}_${ARCH}.deb"
@@ -67,7 +80,7 @@ cp "$SCRIPT_DIR/menu-restart.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32
 cp "$SCRIPT_DIR/menu-sleep.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/menu-sleep.png"
 cp "$SCRIPT_DIR/menu-hibernate.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/menu-hibernate.png"
 cp "$SCRIPT_DIR/menu-hybrid.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/menu-hybrid.png"
-cp "$SCRIPT_DIR/kickermenu_logout.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/kickermenu-logout.png"
+cp "$SCRIPT_DIR/kickermenu-logout.png" "$BUILD_DIR/opt/trinity/share/icons/hicolor/32x32/apps/kickermenu-logout.png"
 
 # Cleanup temp install
 rm -rf "$TEMP_INSTALL_DIR"
