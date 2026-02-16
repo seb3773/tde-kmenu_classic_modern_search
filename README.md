@@ -108,8 +108,10 @@ The script:
 
 ## Screenshots
 
-![Search Interface](screenshots/screenshot_kicker_menu_search.jpg) ![Results](screenshots/screenshot_kicker_menu_search2.jpg)
-![one result](screenshots/screenshot_kicker_menu_search3.jpg) ![no results](screenshots/screenshot_kicker_menu_search4.jpg)
+![good old classic menu](screenshots/screenshot_kicker_menu_classic-x_A.jpg)  
+![instant search](screenshots/screenshot_kicker_menu_classic-x_B.jpg)  
+![configurable](screenshots/screenshot_kicker_menu_classic-x_C.jpg)  
+![sidebar buttons](screenshots/screenshot_kicker_menu_classic-x_D.jpg)  
 
 
 
