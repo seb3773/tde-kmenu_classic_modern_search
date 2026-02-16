@@ -118,6 +118,7 @@ protected slots:
     virtual void slotClear();
     virtual void configChanged();
     void updateRecent();
+    void slotToggleRecentMode();
     void repairDisplay();
     void windowClearTimeout();
     void slotReinitialize();

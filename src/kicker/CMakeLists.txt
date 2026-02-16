@@ -32,7 +32,7 @@ install( FILES
     menu-sleep.png
     menu-hibernate.png
     menu-hybrid.png
-    kickermenu_logout.png
+    kickermenu-logout.png
     DESTINATION ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/32x32/apps )
 
 ##### install import cmake modules ###############

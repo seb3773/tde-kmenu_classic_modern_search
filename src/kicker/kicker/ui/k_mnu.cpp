@@ -209,6 +209,10 @@ void PanelKMenu::windowClearTimeout()
 
 bool PanelKMenu::loadSidePixmap()
 {
+    if (!KickerSettings::useSidePixmap()) {
+        return false;
+    }
+
     // Sidebar width: 36px to accommodate icon buttons
     // Height: 36px base, tiling will handle the rest
     int sideWidth = 36;
@@ -986,7 +990,7 @@ void PanelKMenu::paintEvent(TQPaintEvent * e)
         if (m_hoveredSidebarBtn == 1) {
             p.fillRect(logoutRect, colorGroup().highlight());
         }
-        TQPixmap logoutIco = SmallIcon("system-log-out", iconSize);
+        TQPixmap logoutIco = SmallIcon("kickermenu-logout", iconSize);
         p.drawPixmap(logoutRect.x() + iconOff, logoutRect.y() + iconOff, logoutIco);
     }
 }
@@ -1096,7 +1100,26 @@ void PanelKMenu::mouseReleaseEvent(TQMouseEvent *e)
 {
     if (sideImageRect().contains(e->pos())) return;
     TQMouseEvent newEvent = translateMouseEvent(e);
+
+    int id = idAt(newEvent.pos());
+    if (id == serviceMenuEndId()) {
+        slotToggleRecentMode();
+        return;
+    }
+
     PanelServiceMenu::mouseReleaseEvent( &newEvent );
+}
+
+void PanelKMenu::slotToggleRecentMode()
+{
+    bool recent = KickerSettings::recentVsOften();
+    KickerSettings::setRecentVsOften(!recent);
+    KickerSettings::writeConfig();
+
+    RecentlyLaunchedApps::the().configChanged();
+    RecentlyLaunchedApps::the().m_bNeedToUpdate = true;
+
+    updateRecent();
 }
 
 void PanelKMenu::mouseMoveEvent(TQMouseEvent *e)
@@ -1534,6 +1557,31 @@ bool PanelKMenu::eventFilter(TQObject *o, TQEvent *e)
         }
     }
 
+    if (o == sessionsMenu && e->type() == TQEvent::MouseButtonRelease) {
+        TQMouseEvent *me = static_cast<TQMouseEvent *>(e);
+        if (me->button() == TQMouseEvent::LeftButton) {
+            int id = sessionsMenu->idAt(me->pos());
+            if (id == 97) { // User name title ID
+                hide();
+                TDEProcess *proc = new TDEProcess;
+                *proc << "tdecmshell" << "System/userconfig";
+                proc->start(TDEProcess::DontCare);
+                return true;
+            }
+        }
+    }
+
+    if (o == logoutMenu && e->type() == TQEvent::MouseButtonRelease) {
+        TQMouseEvent *me = static_cast<TQMouseEvent *>(e);
+        if (me->button() == TQMouseEvent::LeftButton) {
+            int id = logoutMenu->idAt(me->pos());
+            if (id == 96) { // Shutdown title ID
+                slotLogout();
+                return true;
+            }
+        }
+    }
+
     if (o == searchEdit && e->type() == TQEvent::FocusIn) {
         // When search bar gets focus (click or tab), deselect any active menu item
         // to avoid visual confusion and keyboard navigation conflicts.
@@ -1549,6 +1597,11 @@ void PanelKMenu::configChanged()
 {
     RecentlyLaunchedApps::the().m_bNeedToUpdate = false;
     RecentlyLaunchedApps::the().configChanged();
+
+    if (!loadSidePixmap()) {
+        sidePixmap = sideTilePixmap = TQPixmap();
+    }
+
     PanelServiceMenu::configChanged();
 }
 
@@ -1562,15 +1615,15 @@ void PanelKMenu::createRecentMenuItems()
 
     if (RecentApps.count() > 0)
     {
-        bool bSeparator = KickerSettings::showMenuTitles();
+        bool bNeedTitle = true;
         bool bTitleTop = KickerSettings::useTopSide();
         int nId = serviceMenuEndId() + 1;
 
         int nIndex;
         if( bTitleTop ) {
-            nIndex = KickerSettings::showMenuTitles() ? 2 : 0;
+            nIndex = 2; // Always account for title (and optional top tile)
         } else {
-            nIndex = KickerSettings::showMenuTitles() ? 1 : 0;
+            nIndex = 1; // Always account for title
         }
 
         for (TQValueList<TQString>::ConstIterator it =
@@ -1583,16 +1636,16 @@ void PanelKMenu::createRecentMenuItems()
             }
             else
             {
-                if (bSeparator)
+                if (bNeedTitle)
                 {
-                    bSeparator = false;
+                    bNeedTitle = false;
                     int id = insertItem(
                         new PopupMenuTitle(
                             RecentlyLaunchedApps::the().caption(), font()),
                         serviceMenuEndId(), 0);
                     setItemEnabled( id, false );
                     if( bTitleTop) {
-                        id = insertItem(new PopupMenuTop(),serviceMenuEndId(),0);
+                        id = insertItem(new PopupMenuTop(), serviceMenuEndId() - 1, 0);
                         setItemEnabled( id, false );
                     }
                 }
@@ -1606,10 +1659,8 @@ void PanelKMenu::createRecentMenuItems()
             }
         }
 
-        if (!KickerSettings::showMenuTitles())
-        {
-            insertSeparator(RecentlyLaunchedApps::the().m_nNumMenuItems);
-        }
+        insertSeparator(RecentlyLaunchedApps::the().m_nNumMenuItems + (bTitleTop ? 2 : 1));
+
     }
     else if(KickerSettings::useTopSide())
     {
@@ -1654,10 +1705,10 @@ void PanelKMenu::updateRecent()
     // remove previous items
     if (RecentlyLaunchedApps::the().m_nNumMenuItems > 0)
     {
-        // -1 --> menu title
-        int i = KickerSettings::showMenuTitles() ? -1 : 0;
+        // Always account for our custom section title
+        int i = -1;
         if(bTitleTop) {
-            i = KickerSettings::showMenuTitles() ? -2 : 0;
+            i = -2;
         }
 
         for (; i < RecentlyLaunchedApps::the().m_nNumMenuItems; i++)
@@ -1667,10 +1718,8 @@ void PanelKMenu::updateRecent()
         }
         RecentlyLaunchedApps::the().m_nNumMenuItems = 0;
 
-        if (!KickerSettings::showMenuTitles())
-        {
-            removeItemAt(0);
-        }
+        // Remove the separator
+        removeItemAt(0);
     }
 
     if(bTitleTop) {
@@ -1683,7 +1732,7 @@ void PanelKMenu::updateRecent()
 
     if (RecentApps.count() > 0)
     {
-        bool bNeedSeparator = KickerSettings::showMenuTitles();
+        bool bNeedTitle = true;
         for (TQValueList<TQString>::ConstIterator it = RecentApps.fromLast();
              /*nop*/; --it)
         {
@@ -1694,9 +1743,9 @@ void PanelKMenu::updateRecent()
             }
             else
             {
-                if (bNeedSeparator)
+                if (bNeedTitle)
                 {
-                    bNeedSeparator = false;
+                    bNeedTitle = false;
                     int id = insertItem(new PopupMenuTitle(
                         RecentlyLaunchedApps::the().caption(),
                             font()), nId - 1, 0);
@@ -1706,19 +1755,14 @@ void PanelKMenu::updateRecent()
                         setItemEnabled( id, false );
                     }
                 }
-                insertMenuItem(s, nId++, KickerSettings::showMenuTitles() ?
-                    1 : 0);
+                insertMenuItem(s, nId++, 1);
                 RecentlyLaunchedApps::the().m_nNumMenuItems++;
             }
 
             if (it == RecentApps.begin())
                 break;
         }
-
-        if (!KickerSettings::showMenuTitles())
-        {
-            insertSeparator(RecentlyLaunchedApps::the().m_nNumMenuItems);
-        }
+        insertSeparator(RecentlyLaunchedApps::the().m_nNumMenuItems + (bTitleTop ? 2 : 1));
     }
     else if(bTitleTop)
     {
