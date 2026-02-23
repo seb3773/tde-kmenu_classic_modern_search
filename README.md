@@ -68,6 +68,34 @@ The `m_inFlatSearchMode` flag enables seamless toggling between the traditional 
 - TDE development environment (tdebase source tree)
 - CMake >= 3.x, GCC, Gold linker
 - `sstrip` (optional, for maximum binary optimization)
+- `tde-cmake` (required for TDE 14.1.5+)
+
+### IMPORTANT: Patch kickerSettings.kcfg (MANDATORY for ALL TDE versions)
+
+**This step is MANDATORY for ALL TDE versions (14.1.1, 14.1.5, and later) before building.** The modern 
+search menu requires two additional configuration entries (`ClassicKMenuOpacity` and `ClassicKMenuBackgroundColor`) 
+that must be added to your tdebase's `kickerSettings.kcfg` file.
+
+Run the patch script from the kicker directory:
+
+```bash
+cd /path/to/tdebase-trinity-X.X.X/kicker
+./patch_kickerSettings.sh
+```
+
+Expected output:
+```
+Patching libkicker/kickerSettings.kcfg...
+✓ Created backup: libkicker/kickerSettings.kcfg.backup
+✓ Successfully patched libkicker/kickerSettings.kcfg
+  Added ClassicKMenuOpacity and ClassicKMenuBackgroundColor entries
+
+Patch completed successfully!
+You can now proceed with the compilation.
+```
+
+**Important:** The `kickerSettings.kcfg` file is NOT provided in this repository to avoid version conflicts.
+You must always patch your existing tdebase file using this script.
 
 ### Optimized Release Build
 

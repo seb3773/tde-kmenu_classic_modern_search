@@ -43,6 +43,41 @@ ls ~/src/tdebase-trinity-14.1.1/kicker/kicker/ui/k_mnu.*
 You should see `k_mnu.cpp` and `k_mnu.h`.
 
 
+
+- IMPORTANT: Patch kickerSettings.kcfg (MANDATORY for ALL TDE versions)
+
+**This step is MANDATORY for ALL TDE versions (14.1.1, 14.1.5, and later).** The modern search menu 
+requires two additional configuration entries (`ClassicKMenuOpacity` and `ClassicKMenuBackgroundColor`) 
+that must be added to your tdebase's `kickerSettings.kcfg` file.
+
+Run the patch script from the kicker directory:
+
+cd ~/src/tdebase-trinity-14.1.1/kicker
+./patch_kickerSettings.sh
+
+Expected output:
+
+```
+Patching libkicker/kickerSettings.kcfg...
+✓ Created backup: libkicker/kickerSettings.kcfg.backup
+✓ Successfully patched libkicker/kickerSettings.kcfg
+  Added ClassicKMenuOpacity and ClassicKMenuBackgroundColor entries
+
+Patch completed successfully!
+You can now proceed with the compilation.
+```
+
+If the entries already exist, you'll see:
+
+```
+✓ kickerSettings.kcfg already contains the required entries
+  No patching needed!
+```
+
+**Important:** The `kickerSettings.kcfg` file is NOT provided in this repository to avoid version conflicts.
+You must always patch your existing tdebase file using this script.
+
+  
 - Prerequisites
 
 Make sure you have:
