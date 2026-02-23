@@ -134,7 +134,6 @@ protected:
     void mouseMoveEvent(TQMouseEvent *);
     bool loadSidePixmap();
     void doNewSession(bool lock);
-    void filterMenu(PanelServiceMenu* menu, const TQString &searchString);
     void keyPressEvent(TQKeyEvent* e);
     bool eventFilter(TQObject *o, TQEvent *e);
     void createRecentMenuItems();
@@ -162,15 +161,19 @@ private:
     static const int            searchLineID;
     TQTimer                    *displayRepairTimer;
     TQTimer                    *blockMouseTimer;  // Grace period timer
-    bool                        displayRepaired;
-    bool                        windowTimerTimedOut;
     TQTimer                    *popupCloseTimer;  // Grace period for sidebar popup close
+
+    // Bools grouped together to minimize struct padding
+    bool                        displayRepaired;
+    volatile bool               windowTimerTimedOut; // Must be volatile to prevent -O2 infinite loop
     bool                        m_inFlatSearchMode;
+    bool                        m_servicesCached;
+
     TQValueList<KService::Ptr>   m_cachedServices;
 
 protected slots:
     void slotClosePopupTimeout();
-    bool                        m_servicesCached;
+    
     KService::Ptr               m_singleMatch;
     int                          m_hoveredSidebarBtn; // -1=none, 0=switchuser, 1=logout
     int m_delayedHoverBtn; // Target button index for delayed hover switch

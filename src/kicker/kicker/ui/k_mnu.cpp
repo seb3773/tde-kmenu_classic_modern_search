@@ -25,10 +25,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <config.h>
 #endif
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -61,6 +57,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <twin.h>
 #include <popupmenutop.h>
 #include <tdeaccel.h>
+#include <netwm.h>
+#undef Success
+#undef FocusIn
+#undef FocusOut
 
 #include "client_mnu.h"
 #include "container_base.h"
@@ -148,6 +148,11 @@ PanelKMenu::PanelKMenu()
     connect( logoutMenu, TQT_SIGNAL(aboutToShow()), TQT_SLOT(slotPopulateLogout()) );
     connect( logoutMenu, TQT_SIGNAL(activated(int)), TQT_SLOT(slotSuspend(int)) );
     logoutMenu->installEventFilter(this);
+    
+    TQPalette pal = palette();
+    pal.setColor(TQColorGroup::Background, KickerSettings::classicKMenuBackgroundColor());
+    setPalette(pal);
+    logoutMenu->setPalette(pal);
 
     // Grace period timer for sidebar popup closing
     popupCloseTimer = new TQTimer(this);
@@ -222,8 +227,8 @@ bool PanelKMenu::loadSidePixmap()
     sidePixmap.resize(sideWidth, sideHeight);
     sideTilePixmap.resize(sideWidth, sideHeight);
 
-    // Get the background color from the widget's color group
-    TQColor bgColor = colorGroup().background();
+    // Get the background color from the configured setting
+    TQColor bgColor = KickerSettings::classicKMenuBackgroundColor();
 
     // Fill the pixmaps
     sidePixmap.fill(bgColor);
@@ -398,6 +403,7 @@ void PanelKMenu::initialize()
         sessionsMenu->installEventFilter(this);
         connect( sessionsMenu, TQT_SIGNAL(aboutToShow()), TQT_SLOT(slotPopulateSessions()) );
         connect( sessionsMenu, TQT_SIGNAL(activated(int)), TQT_SLOT(slotSessionActivated(int)) );
+        sessionsMenu->setPalette(palette());
     }
 
     /*
@@ -913,6 +919,8 @@ void PanelKMenu::paintEvent(TQPaintEvent * e)
     TQPainter p(this);
     p.setClipRegion(e->region());
 
+    TQColor bgColor = KickerSettings::classicKMenuBackgroundColor();
+
     style().drawPrimitive( TQStyle::PE_PanelPopup, &p,
                            TQRect( 0, 0, width(), height() ),
                            colorGroup(), TQStyle::Style_Default,
@@ -943,12 +951,14 @@ void PanelKMenu::paintEvent(TQPaintEvent * e)
     int iconSize = 22;
     int btnSize = 36;
     int iconOff = (btnSize - iconSize) / 2; // center icon in button area
+    
+    TQColor highlightColor = bgColor.light(110);
 
     // Button 0: Switch User (top of button stack)
     if (DM().isSwitchable() && kapp->authorize("switch_user")) {
         TQRect switchRect(fw, height() - fw - btnSize * 5, btnSize, btnSize);
         if (m_hoveredSidebarBtn == 0) {
-            p.fillRect(switchRect, colorGroup().highlight());
+            p.fillRect(switchRect, highlightColor);
         }
         TQPixmap switchIco = SmallIcon("switchuser", iconSize);
         p.drawPixmap(switchRect.x() + iconOff, switchRect.y() + iconOff, switchIco);
@@ -958,7 +968,7 @@ void PanelKMenu::paintEvent(TQPaintEvent * e)
     {
         TQRect documentsRect(fw, height() - fw - btnSize * 4, btnSize, btnSize);
         if (m_hoveredSidebarBtn == 4) {
-            p.fillRect(documentsRect, colorGroup().highlight());
+            p.fillRect(documentsRect, highlightColor);
         }
         TQPixmap documentsIco = SmallIcon("menu-docs", iconSize);
         p.drawPixmap(documentsRect.x() + iconOff, documentsRect.y() + iconOff, documentsIco);
@@ -968,7 +978,7 @@ void PanelKMenu::paintEvent(TQPaintEvent * e)
     {
         TQRect picturesRect(fw, height() - fw - btnSize * 3, btnSize, btnSize);
         if (m_hoveredSidebarBtn == 3) {
-            p.fillRect(picturesRect, colorGroup().highlight());
+            p.fillRect(picturesRect, highlightColor);
         }
         TQPixmap picturesIco = SmallIcon("menu-images", iconSize);
         p.drawPixmap(picturesRect.x() + iconOff, picturesRect.y() + iconOff, picturesIco);
@@ -978,7 +988,7 @@ void PanelKMenu::paintEvent(TQPaintEvent * e)
     {
         TQRect configRect(fw, height() - fw - btnSize * 2, btnSize, btnSize);
         if (m_hoveredSidebarBtn == 2) {
-            p.fillRect(configRect, colorGroup().highlight());
+            p.fillRect(configRect, highlightColor);
         }
         TQPixmap configIco = SmallIcon("menu-settings", iconSize);
         p.drawPixmap(configRect.x() + iconOff, configRect.y() + iconOff, configIco);
@@ -988,7 +998,7 @@ void PanelKMenu::paintEvent(TQPaintEvent * e)
     if (kapp->authorize("logout")) {
         TQRect logoutRect(fw, height() - fw - btnSize, btnSize, btnSize);
         if (m_hoveredSidebarBtn == 1) {
-            p.fillRect(logoutRect, colorGroup().highlight());
+            p.fillRect(logoutRect, highlightColor);
         }
         TQPixmap logoutIco = SmallIcon("kickermenu-logout", iconSize);
         p.drawPixmap(logoutRect.x() + iconOff, logoutRect.y() + iconOff, logoutIco);
@@ -1318,12 +1328,12 @@ void PanelKMenu::slotUpdateSearch(const TQString& searchString)
     // Filter from cached list instead of re-traversing KSycoca
     TQValueList<KService::Ptr> matches;
     int totalMatches = 0;
-    TQString searchLower = searchString.lower();
+    
     for (TQValueList<KService::Ptr>::ConstIterator it = m_cachedServices.begin();
          it != m_cachedServices.end(); ++it) {
         KService::Ptr s = *it;
-        if (s && (s->name().lower().contains(searchLower) ||
-                  s->genericName().lower().contains(searchLower))) {
+        if (s && (s->name().find(searchString, 0, false) != -1 ||
+                  s->genericName().find(searchString, 0, false) != -1)) {
             totalMatches++;
             if (matches.count() < 10) {
                 matches.append(s);
@@ -1538,6 +1548,16 @@ void PanelKMenu::slotClosePopupTimeout()
 
 void PanelKMenu::slotOnShow()
 {
+    // Apply user-configured opacity
+    // Redundancy check: PanelServiceMenu base class now handles X11 property application
+    // to propagate transparency to all submenus.
+    int opacityPercent = KickerSettings::classicKMenuOpacity();
+    if (opacityPercent >= 0 && opacityPercent < 100) {
+        long opac = (long)((opacityPercent / 100.0) * 0xffffffff);
+        static Atom net_wm_opacity = XInternAtom( tqt_xdisplay(), "_NET_WM_WINDOW_OPACITY", False );
+        XChangeProperty( tqt_xdisplay(), winId(), net_wm_opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char *) &opac, 1L );
+    }
+
     // Auto-focus search bar when menu opens.
     // Use a singleShot timer to ensure the widget is fully visible and ready.
     // Auto-focus search bar only if already in search mode
