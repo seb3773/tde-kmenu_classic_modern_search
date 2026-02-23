@@ -49,6 +49,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
+
+// Compatibility for TDE 14.1.5+ where TQT_TQOBJECT macro is not defined
+// In TDE 14.1.1, TQT_TQOBJECT(x) is used for TQt compatibility layer
+// In TDE 14.1.5, this macro is no longer needed and we can use the object directly
+#ifndef TQT_TQOBJECT
+#define TQT_TQOBJECT(x) (x)
+#endif
+
 #include "global.h"
 #include "kicker.h"
 #include "kickerSettings.h"

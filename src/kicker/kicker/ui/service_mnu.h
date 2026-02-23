@@ -32,6 +32,15 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <kservice.h>
 #include <kpanelmenu.h>
 #include <kservicegroup.h>
+
+// Compatibility for TDE 14.1.5+ where KDE_EXPORT was renamed to TDE_EXPORT
+#ifndef KDE_EXPORT
+#ifdef TDE_EXPORT
+#define KDE_EXPORT TDE_EXPORT
+#else
+#define KDE_EXPORT
+#endif
+#endif
 /**
  * PanelServiceMenu is filled with KDE services and service groups. The sycoca
  * database is queried and the hierarchical structure built by creating child
