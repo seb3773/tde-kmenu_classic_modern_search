@@ -17,6 +17,29 @@ This integration brings Windows 10-style instant search filtering to the classic
 *   **Single Match Auto-Launch**: When only one result matches, pressing Enter launches it immediately :-)
 *   **Contextual ESC**: First press clears the search query and returns to normal menu. Second press closes the menu.
 *   **Auto-Reset**: Full menu tree is automatically restored after launching an application or dismissing the menu.
+*   **Transparency**: Configurable Menu (+ sub menus) Transparency.
+*   **Custom background color**: Configurable Menu (+ sub menus) background color with adaptive hover color.
+
+
+
+## Configuration new options:
+Settings for the kicker menu are saved in the standard Kicker config file: ~/.trinity/share/config/kickerrc, Section: [KMenu]:
+
+```
+[KMenu]
+UseSidePixmap=
+ClassicKMenuBackgroundColor=
+ClassicKMenuOpacity=
+CustomIcon=/usr/share/pixmaps/StartHere.png
+ShowText=false
+SearchShortcut=
+```
+
+### New options syntax:  
+ClassicKMenuBackgroundColor=<r,g,b>  
+ClassicKMenuOpacity=<integer between 0 (invisible) and 100 (full opacity)>  
+Please note that UseSidePixmap is used to enable or disable the "new" sidebar (this can be configured in the TDE Dashboard menu config panel too)  
+  
 
 ## Technical Implementation
 
